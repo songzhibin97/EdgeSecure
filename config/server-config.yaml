@@ -1,0 +1,5 @@
+data_dir: /app/data
+server_domain: mtlsserver
+port: "8443"
+http_port: "8080"
+log_level: info

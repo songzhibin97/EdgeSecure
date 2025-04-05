@@ -1,0 +1,53 @@
+services:
+  mtlsserver:
+    image: edgesecure-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: mtlsserver
+    volumes:
+      - ./data/server:/app/data
+    ports:
+      - "80:80"
+      - "8080:8080"  # HTTP CA分发
+      - "8443:8443"  # mTLS
+    environment:
+      - CONFIG_FILE=/app/config/server-config.yaml
+    networks:
+      - edgesecure-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8443"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  edgesecure-client:
+    image: edgesecure:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    container_name: edgesecure-client
+    volumes:
+      - ./data/client:/app/data
+    ports:
+      - "8081:8081"  # 改为8081，避免冲突
+      - "81:81"
+      - "8444:8443"
+    environment:
+      - CONFIG_FILE=/app/config/client-config.yaml
+    networks:
+      - edgesecure-net
+    depends_on:
+      mtlsserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]  # 更新健康检查端口
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  edgesecure-net:
+    driver: bridge

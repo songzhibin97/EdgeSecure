@@ -1,0 +1,5 @@
+data_dir: /app/data
+client_domain: edgesecure-client
+server_addr: mtlsserver:8443
+http_port: "8080"
+log_level: info
